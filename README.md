@@ -2,9 +2,9 @@
 
 1.  Step 1: Serverless framework
 
-    ```bash
-    npm install -g serverless
-    ```
+  ```bash
+  npm install -g serverless
+  ```
 
 2.  Export credentials:
 
@@ -20,8 +20,13 @@
   pip install -r requirements.txt -t vendored
   ```
 
-4.  Deploy to AWS::
+4.  Deploy to AWS:
 
   ```bash
   serverless deploy
   ```
+
+5. Set up webhook:
+
+  ```bash
+  curl --request POST --url https://api.telegram.org/bot<Your Telegram TOKEN>/setWebhook --header 'content-type: application/json' --data '{"url": <API endpoint>}'
