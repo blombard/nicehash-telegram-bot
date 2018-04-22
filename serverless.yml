@@ -1,0 +1,20 @@
+service: NicehashReportBot
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: eu-west-3
+  environment:
+    TELEGRAM_TOKEN: $TELEGRAM_TOKEN
+
+
+
+functions:
+  post:
+    handler: handler.hello
+    events:
+      - http:
+          path: nicehash-report-bot
+          method: post
+          cors: true

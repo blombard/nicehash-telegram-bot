@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# vendored
+
+vendored/
+
 # Distribution / packaging
 .Python
 env/
