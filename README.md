@@ -30,3 +30,5 @@
 
   ```bash
   curl --request POST --url https://api.telegram.org/bot<Your Telegram TOKEN>/setWebhook --header 'content-type: application/json' --data '{"url": <API endpoint>}'
+
+Inspired by this repo : https://github.com/Andrii-D/serverless-telegram-bot
