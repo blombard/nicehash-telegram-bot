@@ -6,8 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
-# vendored
+# yml
+serverless.yml
 
+# vendored
 vendored/
 
 # Distribution / packaging
