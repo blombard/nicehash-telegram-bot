@@ -32,4 +32,10 @@
   curl --request POST --url https://api.telegram.org/bot<Your Telegram TOKEN>/setWebhook --header 'content-type: application/json' --data '{"url": <API endpoint>}'
   ```
 
+6. Ask something to the bot:
+  * /help to get help
+  * /start to say hi
+  * /balance to get the total balance
+  * /detailed_balance to get the distribution bewteen wallets
+
 Inspired by this repo : https://github.com/Andrii-D/serverless-telegram-bot
