@@ -34,8 +34,9 @@
 
 6. Ask something to the bot:
   * /help to get help
-  * /start to say hi
   * /balance to get the total balance
-  * /detailed_balance to get the distribution bewteen wallets
+  * /detailed_balance to get the distribution between wallets
+  * /payments to get the latests payments
+  * /euro to get the balance in EURO
 
 Inspired by this repo : https://github.com/Andrii-D/serverless-telegram-bot
