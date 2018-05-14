@@ -41,62 +41,64 @@ def hello(event, context):
 
 def commandHandler(message):
     return {
-        '/help' : helper(message),
-        '/balance' : balance(message),
-        '/detailed_balance' : detailed_balance(message),
-        '/payments' : payments(message),
-        '/euro' : euro(message)
+        '/help' : helper(),
+        '/balance' : balance(),
+        '/detailed_balance' : detailed_balance(),
+        '/payments' : payments(),
+        '/euro' : euro()
     }.get(message, default())
 
 def default():
     return 'Hello, how are you?\nIf you want to ask me something press /help !'
 
-def helper(message):
+def helper():
     return "/balance to get the total balance\n/detailed_balance to get the distribution bewteen wallets\n/payments to get the last payments\n/euro to get the balance in EURO"
 
-def balance(message):
-    balance = requests.get(NICEHASH_URL+NICEHASH_BALANCE, headers=headers)
-    if balance.status_code == 200:
-        string = json.loads(balance.content.decode('utf-8'))
-        balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
-        total = balance_nicehash + COPAY_BALANCE + COINBASE_BALANCE
-        return '%.8f' % total + " BTC"
-    else:
-        return "erreur avec l'API nicehash"
+def balance():
+    string = decode(NICEHASH_URL+NICEHASH_BALANCE, headers)
+    if "erreur avec l'API" in string:
+        return string
+    balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
+    total = balance_nicehash + COPAY_BALANCE + COINBASE_BALANCE
+    return '%.8f' % total + " BTC"
 
-def detailed_balance(message):
-    balance = requests.get(NICEHASH_URL+NICEHASH_BALANCE, headers=headers)
-    if balance.status_code == 200:
-        string = json.loads(balance.content.decode('utf-8'))
-        balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
-        response = '%.8f' % balance_nicehash + " Nicehash\n" + '%.8f' % float(COPAY_BALANCE) + " copay\n" + '%.8f' % float(COINBASE_BALANCE) + " coinbase"
-        return response
-    else:
-        return "erreur avec l'API nicehash"
+def detailed_balance():
+    string = decode(NICEHASH_URL+NICEHASH_BALANCE, headers)
+    if "erreur avec l'API" in string:
+        return string
+    balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
+    response = '%.8f' % balance_nicehash + " Nicehash\n" + '%.8f' % float(COPAY_BALANCE) + " copay\n" + '%.8f' % float(COINBASE_BALANCE) + " coinbase"
+    return response
 
-def payments(message):
-    payments = requests.get(NICEHASH_URL+NICEHASH_PAYMENTS, headers=headers)
-    if payments.status_code == 200:
-        string = json.loads(payments.content.decode('utf-8'))
-        payments = string["result"]["payments"]
-        response = ''
-        for day_pay in payments:
-            day = time.strftime("%d/%m/%y", time.localtime(int(day_pay["time"])))
-            response += day_pay["amount"] + " BTC " + day + "\n"
-        return response
-    else:
-        return "erreur avec l'API nicehash"
+def payments():
+    string = decode(NICEHASH_URL+NICEHASH_PAYMENTS, headers)
+    if "erreur avec l'API" in string:
+        return string
+    payments = string["result"]["payments"]
+    response = ''
+    for day_pay in payments:
+        day = time.strftime("%d/%m/%y", time.localtime(int(day_pay["time"])))
+        response += day_pay["amount"] + " BTC " + day + "\n"
+    return response
 
-def euro(message):
-	balance = requests.get(NICEHASH_URL+NICEHASH_BALANCE, headers=headers)
-	if balance.status_code == 200:
-		string = json.loads(balance.content.decode('utf-8'))
-		balance_tot = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"]) + float(COPAY_BALANCE) + float(COINBASE_BALANCE)
-	convRate = requests.get(COINMAKETCAP_CONV_RATE_URL, headers=headers)
-	if convRate.status_code == 200:
-		string = json.loads(convRate.content.decode('utf-8'))
-		rate = float(string["data"]["quotes"]["EUR"]["price"])
-		reponse = balance_tot*rate
-		return '%.2f' % reponse + " EUR"
-	else:
-		return "erreur avec l'API"
+def euro():
+    string = decode(NICEHASH_URL+NICEHASH_BALANCE, headers)
+    if "erreur avec l'API" in string:
+        return string
+    balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
+    balance_tot = balance_nicehash + COPAY_BALANCE + COINBASE_BALANCE
+
+    string2 = decode(COINMAKETCAP_CONV_RATE_URL, headers)
+    if "erreur avec l'API" in string:
+        return string2
+    rate = float(string2["data"]["quotes"]["EUR"]["price"])
+
+    reponse = balance_tot*rate
+    return '%.2f' % reponse + " EUR"
+
+def decode(url, headers):
+    request = requests.get(url, headers)
+    if request.status_code == 200:
+        return json.loads(request.content.decode('utf-8'))
+    else:
+        return "erreur avec l'API : {}".format(request.status_code)
