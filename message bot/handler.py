@@ -13,7 +13,7 @@ BASE_URL = "https://api.telegram.org/bot{}".format(TOKEN)
 # REST API nicehash
 NICEHASH_URL = "https://api.nicehash.com/api?method="
 NICEHASH_BALANCE = "balance&id=<id>&key=<key>"
-NICEHASH_PAYMENTS = "stats.provider.payments&addr=<addr>"
+NICEHASH_PROVIDER = "stats.provider.payments&addr=<addr>"
 COINMAKETCAP_CONV_RATE_URL="https://api.coinmarketcap.com/v2/ticker/1/?convert=EUR"
 headers = {'Content-Type': 'application/json'}
 
@@ -55,46 +55,37 @@ def helper():
     return "/balance to get the total balance\n/detailed_balance to get the distribution bewteen wallets\n/payments to get the last payments\n/euro to get the balance in EURO"
 
 def balance():
-    string = decode(NICEHASH_URL+NICEHASH_BALANCE, headers)
-    if "erreur avec l'API" in string:
-        return string
-    balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
-    total = balance_nicehash + COPAY_BALANCE + COINBASE_BALANCE
+    total = balanceNicehash() + COPAY_BALANCE + COINBASE_BALANCE
     return '%.8f' % total + " BTC"
 
 def detailed_balance():
-    string = decode(NICEHASH_URL+NICEHASH_BALANCE, headers)
-    if "erreur avec l'API" in string:
-        return string
-    balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
-    response = '%.8f' % balance_nicehash + " Nicehash\n" + '%.8f' % float(COPAY_BALANCE) + " copay\n" + '%.8f' % float(COINBASE_BALANCE) + " coinbase"
+    response = '%.8f' % balanceNicehash() + " Nicehash\n" + '%.8f' % float(COPAY_BALANCE) + " copay\n" + '%.8f' % float(COINBASE_BALANCE) + " coinbase"
     return response
 
 def payments():
-    string = decode(NICEHASH_URL+NICEHASH_PAYMENTS, headers)
+    string = decode(NICEHASH_URL+NICEHASH_PROVIDER, headers)
     if "erreur avec l'API" in string:
         return string
     payments = string["result"]["payments"]
     response = ''
     for day_pay in payments:
-        day = time.strftime("%d/%m/%y", time.localtime(int(day_pay["time"])))
-        response += day_pay["amount"] + " BTC " + day + "\n"
+        response += day_pay["amount"] + " BTC " + day_pay["time"][:10] + "\n"
     return response
 
 def euro():
-    string = decode(NICEHASH_URL+NICEHASH_BALANCE, headers)
+    balance_tot = balanceNicehash() + COPAY_BALANCE + COINBASE_BALANCE
+
+    string = decode(COINMAKETCAP_CONV_RATE_URL, headers)
     if "erreur avec l'API" in string:
         return string
-    balance_nicehash = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
-    balance_tot = balance_nicehash + COPAY_BALANCE + COINBASE_BALANCE
-
-    string2 = decode(COINMAKETCAP_CONV_RATE_URL, headers)
-    if "erreur avec l'API" in string:
-        return string2
-    rate = float(string2["data"]["quotes"]["EUR"]["price"])
+    rate = float(string["data"]["quotes"]["EUR"]["price"])
 
     reponse = balance_tot*rate
     return '%.2f' % reponse + " EUR"
+
+###########################
+###### HELPER METHOD ######
+###########################
 
 def decode(url, headers):
     request = requests.get(url, headers)
@@ -102,3 +93,18 @@ def decode(url, headers):
         return json.loads(request.content.decode('utf-8'))
     else:
         return "erreur avec l'API : {}".format(request.status_code)
+
+def balanceNicehash():
+    string = decode(NICEHASH_URL+NICEHASH_BALANCE, headers)
+    if "erreur avec l'API" in string:
+        return string
+    balance_confirmed = float(string["result"]["balance_confirmed"]) + float(string["result"]["balance_pending"])
+
+    string2 = decode(NICEHASH_URL+NICEHASH_PROVIDER, headers)
+    balance_unconfirmed = 0
+    if "erreur avec l'API" in string2:
+        return string2
+    for balance in string2["result"]["stats"]:
+        balance_unconfirmed += float(balance["balance"])
+
+    return balance_confirmed + balance_unconfirmed
